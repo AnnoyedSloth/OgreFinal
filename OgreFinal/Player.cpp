@@ -3,9 +3,11 @@
 #include"Player.h"
 
 PlayerManager::PlayerManager(SceneManager* mSceneMgr, Camera *mCamera) {
+	//Player setup
 	mPlayerEnt = mSceneMgr->createEntity("PlayerBody", "Sinbad.mesh");
 	mPlayerEnt->setCastShadows(true);
 
+	
 	mPlayerNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(Vector3::UNIT_Y * 300);
 	mPlayerNode->setScale(10, 10, 10);
 	mPlayerNode->showBoundingBox(true);
@@ -13,6 +15,7 @@ PlayerManager::PlayerManager(SceneManager* mSceneMgr, Camera *mCamera) {
 	mPlayerNode->setPosition(0, -box.getCorner(AxisAlignedBox::FAR_LEFT_BOTTOM).y + 32, 0);
 	mPlayerNode->attachObject(mPlayerEnt);
 
+	//Camera setup
 	mCameraNode = mPlayerNode->createChildSceneNode();
 	//mCameraNode->attachObject(mPlayerNode);
 	mCameraNode->setPosition(0, 5, -20);
@@ -23,12 +26,38 @@ PlayerManager::PlayerManager(SceneManager* mSceneMgr, Camera *mCamera) {
 
 	mKeyDirection = Vector3(0, 0, 0);
 	direction = Vector3::ZERO;
+
+	AnimationSetup();
+}
+
+void PlayerManager::AnimationSetup() {
+	mPlayerEnt->getSkeleton()->setBlendMode(ANIMBLEND_CUMULATIVE);
+
+	String animNames[] =
+	{ "IdleBase", "IdleTop", "RunBase", "RunTop", "HandsClosed", "HandsRelaxed", "DrawSwords",
+		"SliceVertical", "SliceHorizontal", "Dance", "JumpStart", "JumpLoop", "JumpEnd" };
+
+	for (int i = 0; i < NUM_ANIMS; i++)
+	{
+		mAnims[i] = mPlayerEnt->getAnimationState(animNames[i]);
+		mAnims[i]->setLoop(true);
+	}
+
+	// start off in the idle state (top and bottom together)
+	mAnims[ANIM_IDLE_BASE]->setLoop(true);
+	mAnims[ANIM_IDLE_BASE]->setEnabled(true);
+
+	mAnims[ANIM_IDLE_TOP]->setLoop(true);
+	mAnims[ANIM_IDLE_TOP]->setEnabled(true);
+
+	// relax the hands since we're not holding anything
+	mAnims[ANIM_HANDS_RELAXED]->setEnabled(true);
 }
 
 void PlayerManager::PlayerRotation(Camera *mCamera, const OIS::MouseEvent& me) {
 	//mCameraNode->yaw(Degree(-0.05f * me.state.X.rel), Node::TS_WORLD);
 	mPlayerNode->yaw(Degree(-0.05f * me.state.X.rel), Node::TS_WORLD);
-	mCamera->pitch(Degree(0.005f * me.state.Y.rel));
+	mCamera->pitch(Degree(-0.05f * me.state.Y.rel));
 }
 
 void PlayerManager::PlayerTranslation(const OIS::KeyEvent& ke) {
@@ -44,6 +73,8 @@ void PlayerManager::PlayerTranslation(const OIS::KeyEvent& ke) {
 	if (ke.key == OIS::KC_D) {
 		mKeyDirection.x = -1;
 	}
+
+
 }
 
 void PlayerManager::ReleasedKey(const OIS::KeyEvent& ke) {
@@ -69,7 +100,27 @@ void PlayerManager::UpdatePosition(const Ogre::FrameEvent& fe) {
 		direction.y = 0;
 		direction.normalise();
 		mPlayerNode->translate(mKeyDirection.x * fe.timeSinceLastFrame * 100, 0, mKeyDirection.z * fe.timeSinceLastFrame * 100, Node::TS_LOCAL);
+
+		mAnims[ANIM_RUN_BASE]->setLoop(true);
+		mAnims[ANIM_RUN_BASE]->setEnabled(true);
+		mAnims[ANIM_RUN_BASE]->addTime(fe.timeSinceLastFrame);
+
+		mAnims[ANIM_RUN_TOP]->setLoop(true);
+		mAnims[ANIM_RUN_TOP]->setEnabled(true);	
+		mAnims[ANIM_RUN_TOP]->setTimePosition(mAnims[ANIM_RUN_BASE]->getTimePosition());
+		mAnims[ANIM_RUN_TOP]->addTime(fe.timeSinceLastFrame);
 	}
+	else {
+		mAnims[ANIM_RUN_BASE]->setEnabled(false);
+		mAnims[ANIM_RUN_TOP]->setEnabled(false);
+
+		mAnims[ANIM_IDLE_BASE]->setLoop(true);
+		mAnims[ANIM_IDLE_BASE]->setEnabled(true);
+		mAnims[ANIM_IDLE_TOP]->setLoop(true);
+		mAnims[ANIM_IDLE_TOP]->setEnabled(true);
+		mAnims[ANIM_IDLE_BASE]->addTime(fe.timeSinceLastFrame);
+		mAnims[ANIM_IDLE_TOP]->addTime(fe.timeSinceLastFrame);
+	}		   
 }
 
 void PlayerManager::UpdateCamera() {

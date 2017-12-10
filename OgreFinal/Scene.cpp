@@ -46,6 +46,14 @@ void SceneSetter::ObjectSetting(SceneManager *mSceneMgr)
 	Ogre::SceneNode* tudorNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("tudorNode");
 	tudorNode->setPosition(0, 530, -2000);
 	tudorNode->attachObject(tudorEntity);
+
+	Entity* treeEnt = mSceneMgr->createEntity("Tree.mesh");
+	//treeEnt->setMaterialName("Tree");
+	SceneNode* treeNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("TreeNode");
+	treeNode->setPosition(0, -10, 0);
+	treeNode->setScale(30, 30, 30);
+	treeNode->pitch(Degree(-90));
+	treeNode->attachObject(treeEnt);
 }
 
 void SceneSetter::LightSetting(SceneManager *mSceneMgr)
