@@ -3,6 +3,9 @@
 
 
 class SceneSetter {
+private:
+	std::vector<Entity*> fenceEnt;
+	std::vector<SceneNode*> fenceNode;
 public:
 	SceneSetter();
 	void Setter(SceneManager *mSceneMgr);

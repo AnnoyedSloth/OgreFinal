@@ -6,13 +6,14 @@ PlayerManager::PlayerManager(SceneManager* mSceneMgr, Camera *mCamera) {
 	//Player setup
 	mPlayerEnt = mSceneMgr->createEntity("PlayerBody", "Sinbad.mesh");
 	mPlayerEnt->setCastShadows(true);
-
+	//mPlayerEnt->getBoundingRadius();
+	mPlayerEnt->getWorldBoundingBox();
 	
 	mPlayerNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(Vector3::UNIT_Y * 300);
 	mPlayerNode->setScale(10, 10, 10);
 	mPlayerNode->showBoundingBox(true);
 	AxisAlignedBox box = mPlayerEnt->getBoundingBox();
-	mPlayerNode->setPosition(0, -box.getCorner(AxisAlignedBox::FAR_LEFT_BOTTOM).y + 32, 0);
+	mPlayerNode->setPosition(0, -box.getCorner(AxisAlignedBox::FAR_LEFT_BOTTOM).y + 32, -1000);
 	mPlayerNode->attachObject(mPlayerEnt);
 
 	//Camera setup
@@ -26,6 +27,8 @@ PlayerManager::PlayerManager(SceneManager* mSceneMgr, Camera *mCamera) {
 
 	mKeyDirection = Vector3(0, 0, 0);
 	direction = Vector3::ZERO;
+	bulletCount = 30;
+
 
 	AnimationSetup();
 }
@@ -73,8 +76,6 @@ void PlayerManager::PlayerTranslation(const OIS::KeyEvent& ke) {
 	if (ke.key == OIS::KC_D) {
 		mKeyDirection.x = -1;
 	}
-
-
 }
 
 void PlayerManager::ReleasedKey(const OIS::KeyEvent& ke) {
@@ -105,10 +106,10 @@ void PlayerManager::UpdatePosition(const Ogre::FrameEvent& fe) {
 		mAnims[ANIM_RUN_BASE]->setEnabled(true);
 		mAnims[ANIM_RUN_BASE]->addTime(fe.timeSinceLastFrame);
 
-		mAnims[ANIM_RUN_TOP]->setLoop(true);
-		mAnims[ANIM_RUN_TOP]->setEnabled(true);	
-		mAnims[ANIM_RUN_TOP]->setTimePosition(mAnims[ANIM_RUN_BASE]->getTimePosition());
-		mAnims[ANIM_RUN_TOP]->addTime(fe.timeSinceLastFrame);
+		//mAnims[ANIM_RUN_TOP]->setLoop(true);
+		//mAnims[ANIM_RUN_TOP]->setEnabled(true);	
+		//mAnims[ANIM_RUN_TOP]->setTimePosition(mAnims[ANIM_RUN_BASE]->getTimePosition());
+		//mAnims[ANIM_RUN_TOP]->addTime(fe.timeSinceLastFrame);
 	}
 	else {
 		mAnims[ANIM_RUN_BASE]->setEnabled(false);
@@ -125,4 +126,26 @@ void PlayerManager::UpdatePosition(const Ogre::FrameEvent& fe) {
 
 void PlayerManager::UpdateCamera() {
 	//mPitchNode->setPosition(mPlayerNode->getPosition() + Vector3::UNIT_Y * 2);
+}
+
+void PlayerManager::BulletShooting(SceneManager* mSceneMgr) {
+	if (bulletCount > 0) {
+		Vector3 bulletDirection = Vector3::ZERO;
+		bulletDirection += mCameraNode->getOrientation().x;
+		bulletDirection += mCameraNode->getOrientation().y;
+		bulletDirection += mCameraNode->getOrientation().z;
+		bulletDirection.normalise();
+		bulletsName.str(std::string());
+		bulletsName << "bulletName" << bulletCount;
+		myBullet.push_back(new Bullet(mSceneMgr, mPlayerNode->getPosition(), bulletsName.str(), bulletDirection));
+		bulletCount--;
+	}
+}
+
+void PlayerManager::BulletMove(const Ogre::FrameEvent& fe) {
+	if (myBullet.empty() == false) {
+		for (auto it = myBullet.begin(); it != myBullet.end(); it++) {
+			(*it)->BulletMove(fe);
+		}
+	}
 }

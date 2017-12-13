@@ -7,7 +7,7 @@ ProjectFarm::ProjectFarm()
 	: mRoot(0), mShutdown(0),
 	mResourcesCfg(Ogre::StringUtil::BLANK),
 	mPluginsCfg(Ogre::StringUtil::BLANK),
-	mWindow(0), mSceneMgr(0), mCamera(0), mInputMgr(0), mMouse(0), mKeyboard(0)
+	mWindow(0), mSceneMgr(0), mFirstScene(0), mCamera(0), mInputMgr(0), mMouse(0), mKeyboard(0)
 {
 
 }
@@ -19,6 +19,12 @@ ProjectFarm::~ProjectFarm()
 	windowClosed(mWindow);
 
 	delete mRoot;
+}
+
+static void sceneSwap(SceneManager *&before, SceneManager *&after) {
+	SceneManager *tmp = before;
+	before = after;
+	after = tmp;
 }
 
 void ProjectFarm::go()
@@ -84,13 +90,29 @@ void ProjectFarm::createCamera()
 {
 	mCamera = mSceneMgr->createCamera("MainCam");
 	mCamera->setNearClipDistance(5);
+	mFirstScene->createCamera("MainCam");
 }
 
 void ProjectFarm::createViewports()
 {
-	Ogre::Viewport* vp = mWindow->addViewport(mCamera);
+	setupViewport(mFirstScene); // 타이틀 화면 먼저 세팅
+
+	mSceneMgr->setAmbientLight(ColourValue(0.2, 0.2, 0.2));
+}
+
+void ProjectFarm::chooseSceneManager()
+{
+	mSceneMgr = mRoot->createSceneManager(ST_GENERIC, "Main");
+	mFirstScene = mRoot->createSceneManager(ST_GENERIC, "First");
+}
+
+void ProjectFarm::setupViewport(Ogre::SceneManager *curr)
+{
+	mWindow->removeAllViewports();
+	Ogre::Camera *cam = curr->getCamera("MainCam");
+	Ogre::Viewport* vp = mWindow->addViewport(cam);
 	vp->setBackgroundColour(Ogre::ColourValue(0, 0, 0));
-	mCamera->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
+	cam->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
 }
 
 #pragma endregion
@@ -109,19 +131,14 @@ bool ProjectFarm::frameRenderingQueued(const Ogre::FrameEvent& fe)
 	}
 
 	if (mWindow->isClosed()) return false;
-	//
-	//mPlayerNode->translate(playerDirection *fe.timeSinceLastFrame, Ogre::Node::TS_LOCAL);
 
 	mKeyboard->capture();
 	mMouse->capture();
 
 	mPlayer->UpdatePosition(fe);
-
-	//playerptr->MovePlayer(fe);
-
-	//mCameraNode->translate(playerptr->getPosition() *fe.timeSinceLastFrame, Ogre::Node::TS_LOCAL);
-
-	//mPlayerAnimationState->addTime(fe.timeSinceLastFrame);
+	//myWolf->WolfTranslation(fe);
+	mPlayer->BulletMove(fe);
+	
 
 	return true;
 }
@@ -134,6 +151,9 @@ bool ProjectFarm::mouseMoved(const OIS::MouseEvent& me)
 }
 bool ProjectFarm::mousePressed(const OIS::MouseEvent& me, OIS::MouseButtonID id)
 {
+	if (id == OIS::MB_Left) {
+		mPlayer->BulletShooting(mSceneMgr);
+	}
 	return true;
 }
 bool ProjectFarm::mouseReleased(const OIS::MouseEvent& me, OIS::MouseButtonID id)
@@ -143,6 +163,10 @@ bool ProjectFarm::mouseReleased(const OIS::MouseEvent& me, OIS::MouseButtonID id
 
 bool ProjectFarm::keyPressed(const OIS::KeyEvent& ke)
 {
+	if (ke.key == OIS::KC_SPACE) {
+		sceneSwap(mFirstScene, mSceneMgr);
+		setupViewport(mSceneMgr);
+	}
 	mPlayer->PlayerTranslation(ke);
 	return true;
 }
@@ -152,16 +176,11 @@ bool ProjectFarm::keyReleased(const OIS::KeyEvent& ke)
 	return true;
 }
 
-
-void ProjectFarm::chooseSceneManager()
-{
-	mSceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC);
-}
-
-
 //Create Overall Scene
 void ProjectFarm::createScene()
 {
+	mFirstScene->setSkyDome(true, "Examples/CloudySky", 5, 8);
+
 	mSceneSetter = new SceneSetter();
 	mSceneSetter->GroundSetting(mSceneMgr);
 	mSceneSetter->ObjectSetting(mSceneMgr);
@@ -169,7 +188,7 @@ void ProjectFarm::createScene()
 	mSceneSetter->ParticleSetting(mSceneMgr);
 
 	mPlayer = new PlayerManager(mSceneMgr, mCamera);
-
+	myWolf = new Wolf(mSceneMgr, Vector3(0, 0, -800), "Doggy");
 }
 
 #pragma region Irrelevant
@@ -294,13 +313,13 @@ extern "C"
 		catch (Ogre::Exception& e)
 		{
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
-			/*
+			
 			MessageBox(
 			NULL,
 			e.getFullDescription().c_str(),
 			"An exception has occured!",
 			MB_OK | MB_ICONERROR | MB_TASKMODAL);
-			*/
+			
 #else
 			std::cerr << "An exception has occured: " <<
 				e.getFullDescription().c_str() << std::endl;

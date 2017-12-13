@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "Bullet.h"
 
 #define NUM_ANIMS 13
 
@@ -24,6 +25,11 @@ class PlayerManager {
 
 	AnimationState* mAnims[NUM_ANIMS];
 
+	std::list<Bullet*> myBullet;
+
+	int bulletCount;
+	std::stringstream bulletsName;
+
 	Entity* mPlayerEnt;
 	SceneNode* mPlayerNode;
 
@@ -42,4 +48,7 @@ public:
 	void ReleasedKey(const OIS::KeyEvent& ke);
 	void UpdatePosition(const Ogre::FrameEvent& fe);
 	void UpdateCamera();
+
+	void BulletShooting(SceneManager* mSceneMgr);
+	void BulletMove(const Ogre::FrameEvent& fe);
 };

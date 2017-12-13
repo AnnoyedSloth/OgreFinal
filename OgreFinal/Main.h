@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "Scene.h"
 #include "Player.h"
+#include "Enemy.h"
 #include "SdkTrays.h"
 
 class ProjectFarm : public WindowEventListener, public FrameListener, public OgreBites::SdkTrayListener, public OIS::KeyListener, public OIS::MouseListener {
@@ -12,10 +13,12 @@ private:
 	String mPluginsCfg;
 	RenderWindow* mWindow;
 	SceneManager* mSceneMgr;
+	SceneManager* mFirstScene;
 	Camera* mCamera;
 
 	SceneSetter* mSceneSetter;
 	PlayerManager* mPlayer;
+	Wolf* myWolf;
 
 	//CharacterController* player;
 	SdkTrayListener* mTrayMgr;
@@ -37,6 +40,7 @@ protected:
 	virtual void createResourceListener(void);
 	virtual void loadResources(void);
 	virtual bool setup();
+	virtual void setupViewport(SceneManager *curr);
 	virtual bool frameRenderingQueued(const Ogre::FrameEvent& fe);
 	virtual bool keyPressed(const OIS::KeyEvent& ke);
 	virtual bool keyReleased(const OIS::KeyEvent& ke);
