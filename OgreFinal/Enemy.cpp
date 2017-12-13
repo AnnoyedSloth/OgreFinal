@@ -2,45 +2,43 @@
 #include"stdafx.h"
 #include"Enemy.h"
 
-Wolf::Wolf(SceneManager* mSceneMgr, Vector3 loc, String wolfName) 
+Enemy::Enemy(SceneManager* mSceneMgr, Vector3 pos, String EnemyName) 
 {
 
-	mWolfEnt = mSceneMgr->createEntity(wolfName, "Wolf.mesh");
-	mWolfEnt->setCastShadows(true);
+	mEnemyEnt = mSceneMgr->createEntity(EnemyName, "Ninja.mesh");
+	mEnemyEnt->setCastShadows(true);
 
+	initPos = pos;
 
-	mWolfNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(Vector3::UNIT_Y * 300);
-	mWolfNode->setScale(30, 30, 30);
-	mWolfNode->showBoundingBox(true);
-	AxisAlignedBox box = mWolfEnt->getBoundingBox();
-	mWolfNode->setPosition(loc.x, -box.getCorner(AxisAlignedBox::FAR_LEFT_BOTTOM).y + 32, loc.z);
-	mWolfNode->pitch(Degree(-90));
-	mWolfNode->attachObject(mWolfEnt);
+	mEnemyNode = mSceneMgr->getRootSceneNode()->createChildSceneNode(Vector3::UNIT_Y * 300);
+	mEnemyNode->setScale(.5, .5, .5);
+	mEnemyNode->showBoundingBox(false);
+	AxisAlignedBox box = mEnemyEnt->getBoundingBox();
+	mEnemyNode->setPosition(pos.x, -box.getCorner(AxisAlignedBox::FAR_LEFT_BOTTOM).y-15, pos.z);
+	//mEnemyNode->pitch(Degree(-90));
+	//mEnemyNode->roll(Degree(180));
+	mEnemyNode->attachObject(mEnemyEnt);
 
-	//AnimationSetup();
+	AnimationSetup();
 }
 
-void Wolf::AnimationSetup() {
-
-	//SkeletonPtr skel = SkeletonManager::getSingleton().load("Wolf.skeleton",		ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME).staticCast<Skeleton>();
-
-	String animNames[] = {"wolf_run_cycle"};
-
-	if (animNames[0] == mAnims[0]->getAnimationName()) {
-		mAnims[0]->setWeight(0);
-	}
-
-	//for (int i = 0; i < WOLF_ANIM_COUNT; i++)
-	//{
-	//	mAnims[i] = mWolfEnt->getAnimationState(animNames[i]);
-	//	mAnims[i]->setLoop(true);
-	//}
-	mAnims[ANIM_RUN]->setLoop(true);
-	mAnims[ANIM_RUN]->setEnabled(true);
+void Enemy::AnimationSetup() {
+	
+	mAnimationState = mEnemyEnt->getAnimationState("Stealth"); mAnimationState->setLoop(true); mAnimationState->setEnabled(true);
 
 }
 
-void Wolf::WolfTranslation(const FrameEvent& fe) {
+void Enemy::EnemyTranslation(const FrameEvent& fe) {
+	if (mEnemyNode->getPosition().z < -1500) GoingBack();
+	mEnemyNode->translate(Vector3(0, 0, -1) * fe.timeSinceLastFrame * 100);
+	position = mEnemyNode->getPosition();
+	mAnimationState->addTime(fe.timeSinceLastFrame);
+}
 
-	mAnims[ANIM_RUN]->addTime(fe.timeSinceLastFrame);
+void Enemy::GoingBack() {
+	mEnemyNode->setPosition(initPos);
+}
+
+Vector3 Enemy::getPos() {
+	return position;
 }

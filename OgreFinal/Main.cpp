@@ -1,13 +1,15 @@
+#pragma once
 #include "stdafx.h"
 #include "Main.h"
 
 
 #pragma region Setup
 ProjectFarm::ProjectFarm()
-	: mRoot(0), mShutdown(0),
+	: mRoot(0), mShutdown(0), isStarted(false),
 	mResourcesCfg(Ogre::StringUtil::BLANK),
 	mPluginsCfg(Ogre::StringUtil::BLANK),
-	mWindow(0), mSceneMgr(0), mFirstScene(0), mCamera(0), mInputMgr(0), mMouse(0), mKeyboard(0)
+	mWindow(0), mSceneMgr(0), mFirstScene(0), mLastScene(0), mCamera(0), mInputMgr(0), mMouse(0), mKeyboard(0),
+	timer(30), mTimerInfo(0), mScoreInfo(0), mBulletInfo(0), mOverlaySystem(0), isMainScene(0)
 {
 
 }
@@ -91,19 +93,23 @@ void ProjectFarm::createCamera()
 	mCamera = mSceneMgr->createCamera("MainCam");
 	mCamera->setNearClipDistance(5);
 	mFirstScene->createCamera("MainCam");
+	mLastScene->createCamera("LastCam");
 }
 
 void ProjectFarm::createViewports()
 {
 	setupViewport(mFirstScene); // 타이틀 화면 먼저 세팅
 
-	mSceneMgr->setAmbientLight(ColourValue(0.2, 0.2, 0.2));
+	mSceneMgr->setAmbientLight(ColourValue(0.2f, 0.2f, 0.2f));
 }
 
 void ProjectFarm::chooseSceneManager()
 {
 	mSceneMgr = mRoot->createSceneManager(ST_GENERIC, "Main");
 	mFirstScene = mRoot->createSceneManager(ST_GENERIC, "First");
+	mLastScene = mRoot->createSceneManager(ST_GENERIC, "Last");
+	mOverlaySystem = new Ogre::OverlaySystem();
+	mSceneMgr->addRenderQueueListener(mOverlaySystem);
 }
 
 void ProjectFarm::setupViewport(Ogre::SceneManager *curr)
@@ -113,6 +119,7 @@ void ProjectFarm::setupViewport(Ogre::SceneManager *curr)
 	Ogre::Viewport* vp = mWindow->addViewport(cam);
 	vp->setBackgroundColour(Ogre::ColourValue(0, 0, 0));
 	cam->setAspectRatio(Ogre::Real(vp->getActualWidth()) / Ogre::Real(vp->getActualHeight()));
+	isMainScene = true;
 }
 
 #pragma endregion
@@ -135,12 +142,36 @@ bool ProjectFarm::frameRenderingQueued(const Ogre::FrameEvent& fe)
 	mKeyboard->capture();
 	mMouse->capture();
 
-	mPlayer->UpdatePosition(fe);
-	//myWolf->WolfTranslation(fe);
-	mPlayer->BulletMove(fe);
-	
+	if (isStarted) {
+		mPlayer->UpdatePosition(fe);
+
+		mPlayer->BulletMove(fe, mSceneMgr);
+
+		for (int a = 0; a < myEnemy.size(); a++) {
+			myEnemy[a]->EnemyTranslation(fe);
+		}
+
+		if (isStarted) time = clock();
+
+		timer = 65 - time / CLOCKS_PER_SEC;
+		if (timer < 0)
+			setupViewport(mLastScene);
+		
+		String sTimer = "Time : " + std::to_string((int)timer);
+		mPlayer->checkcollision(mSceneMgr, myEnemy);
+		UIUpdate();
+		mTimerInfo->setCaption(sTimer);
+	}
 
 	return true;
+}
+
+
+void ProjectFarm::UIUpdate() {
+	String sScore = "Score : " + std::to_string((int)mPlayer->getScore());
+	String sBulletNum = std::to_string((int)mPlayer->getBulletNum()) + " / 30";
+	mScoreInfo->setCaption(sScore);
+	mBulletInfo->setCaption(sBulletNum);
 }
 
 bool ProjectFarm::mouseMoved(const OIS::MouseEvent& me)
@@ -154,6 +185,7 @@ bool ProjectFarm::mousePressed(const OIS::MouseEvent& me, OIS::MouseButtonID id)
 	if (id == OIS::MB_Left) {
 		mPlayer->BulletShooting(mSceneMgr);
 	}
+
 	return true;
 }
 bool ProjectFarm::mouseReleased(const OIS::MouseEvent& me, OIS::MouseButtonID id)
@@ -164,8 +196,11 @@ bool ProjectFarm::mouseReleased(const OIS::MouseEvent& me, OIS::MouseButtonID id
 bool ProjectFarm::keyPressed(const OIS::KeyEvent& ke)
 {
 	if (ke.key == OIS::KC_SPACE) {
-		sceneSwap(mFirstScene, mSceneMgr);
+		
+		//if(!isMainScene)sceneSwap(mFirstScene, mSceneMgr);
 		setupViewport(mSceneMgr);
+		//mEndGame->hide();
+		isStarted = true;		
 	}
 	mPlayer->PlayerTranslation(ke);
 	return true;
@@ -180,6 +215,7 @@ bool ProjectFarm::keyReleased(const OIS::KeyEvent& ke)
 void ProjectFarm::createScene()
 {
 	mFirstScene->setSkyDome(true, "Examples/CloudySky", 5, 8);
+	//mLastScene->setSkyBox(true, "EveningSkyBox");
 
 	mSceneSetter = new SceneSetter();
 	mSceneSetter->GroundSetting(mSceneMgr);
@@ -188,7 +224,14 @@ void ProjectFarm::createScene()
 	mSceneSetter->ParticleSetting(mSceneMgr);
 
 	mPlayer = new PlayerManager(mSceneMgr, mCamera);
-	myWolf = new Wolf(mSceneMgr, Vector3(0, 0, -800), "Doggy");
+	myEnemy.push_back(new Enemy(mSceneMgr, Vector3(-100, -15, 800), "Ninja"));
+	myEnemy.push_back(new Enemy(mSceneMgr, Vector3(100,  -15, 600), "Ninja1"));
+	myEnemy.push_back(new Enemy(mSceneMgr, Vector3(-250, -15, 1000), "Ninja2"));
+	myEnemy.push_back(new Enemy(mSceneMgr, Vector3(250,  -15, 700), "Ninja3"));
+	myEnemy.push_back(new Enemy(mSceneMgr, Vector3(-150, -15, 800), "Ninja4"));
+	myEnemy.push_back(new Enemy(mSceneMgr, Vector3(150,  -15, 600), "Ninja5"));
+	myEnemy.push_back(new Enemy(mSceneMgr, Vector3(50,   -15, 0), "Ninja6"));
+	myEnemy.push_back(new Enemy(mSceneMgr, Vector3(-50,  -15, 700), "Ninja7"));
 }
 
 #pragma region Irrelevant
@@ -201,6 +244,12 @@ void ProjectFarm::createFrameListener()
 {
 	Ogre::LogManager::getSingletonPtr()->logMessage("*** Initializing OIS ***");
 
+	UIMgr = new OgreBites::SdkTrayManager("InterfaceName", mWindow, mInputContext, this);
+	mTimerInfo = UIMgr->createLabel(OgreBites::TL_TOP, "TInfo", "", 100);
+	mScoreInfo = UIMgr->createLabel(OgreBites::TL_BOTTOMLEFT, "TInfo1", "", 200);
+	mBulletInfo = UIMgr->createLabel(OgreBites::TL_BOTTOMRIGHT, "TInfo2", "", 100);
+	//mEndGame = UIMgr->createLabel(OgreBites::TL_CENTER, "End", "", 400);
+	//mEndGame->hide();
 	OIS::ParamList pl;
 	size_t windowHnd = 0;
 	std::ostringstream windowHndStr;
@@ -224,8 +273,11 @@ void ProjectFarm::createFrameListener()
 	Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
 
 	mRoot->addFrameListener(this);
-
+	
+	mInputContext.mKeyboard = mKeyboard;
+	mInputContext.mMouse = mMouse;
 	Ogre::LogManager::getSingletonPtr()->logMessage("Finished");
+
 }
 
 void ProjectFarm::setupResources()
@@ -314,11 +366,11 @@ extern "C"
 		{
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 			
-			MessageBox(
-			NULL,
-			e.getFullDescription().c_str(),
-			"An exception has occured!",
-			MB_OK | MB_ICONERROR | MB_TASKMODAL);
+			//MessageBox(
+			//NULL,
+			//e.getFullDescription().c_str(),
+			//"An exception has occured!",
+			//MB_OK | MB_ICONERROR | MB_TASKMODAL);
 			
 #else
 			std::cerr << "An exception has occured: " <<

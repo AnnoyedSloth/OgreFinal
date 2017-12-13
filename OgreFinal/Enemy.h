@@ -1,24 +1,30 @@
+#pragma once
 #include "stdafx.h"
 
-#define WOLF_ANIM_COUNT 1
+#define ENEMY_ANIM_COUNT 1
 
-class Wolf 
+class Enemy 
 {
 	enum AnimID 
 	{
-		ANIM_RUN
+		ANIM_WALK,
+		ANIM_IDLE
 	};
 
-	AnimationState* mAnims[WOLF_ANIM_COUNT];
+	AnimationState* mAnimationState;
 
-	Entity* mWolfEnt;
-	SceneNode* mWolfNode;
+	Entity* mEnemyEnt;
+	SceneNode* mEnemyNode;
 
+	Vector3 initPos;
+	Vector3 position;
 	Vector3 movement;
 	Vector3 direction;
 
 public:
-	Wolf(SceneManager* mSceneMgr, Vector3 loc, String wolfName);
+	Enemy(SceneManager* mSceneMgr, Vector3 loc, String EnemyName);
 	void AnimationSetup();
-	void WolfTranslation(const FrameEvent& fe);
+	void EnemyTranslation(const FrameEvent& fe);
+	void GoingBack();
+	Vector3 getPos();
 };

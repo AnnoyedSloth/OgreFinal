@@ -1,7 +1,9 @@
+#pragma once
 #include "stdafx.h"
 #include "Bullet.h"
-
+#include "Enemy.h"
 #define NUM_ANIMS 13
+#define ANIM_FADE_SPEED 7.5f
 
 class PlayerManager {
 
@@ -25,13 +27,20 @@ class PlayerManager {
 
 	AnimationState* mAnims[NUM_ANIMS];
 
+	bool mFadingIn[NUM_ANIMS];
+	bool mFadingOut[NUM_ANIMS];
+
 	std::list<Bullet*> myBullet;
 
-	int bulletCount;
 	std::stringstream bulletsName;
 
 	Entity* mPlayerEnt;
 	SceneNode* mPlayerNode;
+
+	Real score;
+	Real bulletCount;
+
+	bool _mIsColliside;
 
 	SceneNode* mCameraNode;
 	SceneNode* mPitchNode;
@@ -40,6 +49,9 @@ class PlayerManager {
 	Vector3 direction;
 	Vector3 mKeyDirection;
 
+	AxisAlignedBoxSceneQuery *AABBQuery;
+	SceneQueryResult result;
+
 public:
 	PlayerManager(SceneManager* mSceneMgr, Camera *mCamera);
 	void AnimationSetup();
@@ -47,8 +59,12 @@ public:
 	void PlayerTranslation(const OIS::KeyEvent& ke);
 	void ReleasedKey(const OIS::KeyEvent& ke);
 	void UpdatePosition(const Ogre::FrameEvent& fe);
-	void UpdateCamera();
-
+	void AttackAnimation(const Ogre::FrameEvent& fe);
+	void fadeAnimations(Real deltaTime);
 	void BulletShooting(SceneManager* mSceneMgr);
-	void BulletMove(const Ogre::FrameEvent& fe);
+	void BulletMove(const Ogre::FrameEvent& fe, SceneManager* mSceneMgr);
+	void checkcollision(SceneManager* mSceneMgr, std::vector<Enemy*> enemys);
+	void UIUpdate(Real *pScore, Real *pBulletNum);
+	Real getScore();
+	Real getBulletNum();
 };

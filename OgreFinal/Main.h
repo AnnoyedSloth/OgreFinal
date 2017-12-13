@@ -1,3 +1,4 @@
+#pragma once
 #include "stdafx.h"
 #include "Scene.h"
 #include "Player.h"
@@ -8,17 +9,36 @@ class ProjectFarm : public WindowEventListener, public FrameListener, public Ogr
 
 private:
 	bool mShutdown;
+	bool isStarted;
 	Root* mRoot;
 	String mResourcesCfg;
 	String mPluginsCfg;
 	RenderWindow* mWindow;
 	SceneManager* mSceneMgr;
 	SceneManager* mFirstScene;
+	SceneManager* mLastScene;
+	OverlaySystem* mOverlaySystem;
+	clock_t time;
+
+	bool isMainScene;
+
+	Real timer;
+
+
+	OgreBites::InputContext mInputContext;
+	OgreBites::SdkTrayManager* UIMgr;
+	OgreBites::Label* mTimerInfo;
+	OgreBites::Label* mScoreInfo;
+	OgreBites::Label* mBulletInfo;
+
+	OgreBites::Label* mStartGame;
+	OgreBites::Label* mEndGame;
+
 	Camera* mCamera;
 
 	SceneSetter* mSceneSetter;
 	PlayerManager* mPlayer;
-	Wolf* myWolf;
+	std::vector<Enemy*> myEnemy;
 
 	//CharacterController* player;
 	SdkTrayListener* mTrayMgr;
@@ -51,6 +71,7 @@ protected:
 	virtual void destroyScene(void);
 	virtual void windowResized(Ogre::RenderWindow* rw);
 	virtual void windowClosed(Ogre::RenderWindow* rw);
+	virtual void UIUpdate();
 public:
 	ProjectFarm();
 	virtual ~ProjectFarm();

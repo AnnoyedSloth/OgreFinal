@@ -48,6 +48,8 @@ void SceneSetter::ObjectSetting(SceneManager *mSceneMgr)
 	//fence2Node->roll(Degree(-90));
 	//fence2Node->attachObject(fence2);
 
+
+	//Wooden fences
 	std::stringstream FenceNodeName;
 	AxisAlignedBox fenceBox[12];
 
@@ -60,7 +62,7 @@ void SceneSetter::ObjectSetting(SceneManager *mSceneMgr)
 		fenceEnt[a]->setCastShadows(true);
 		fenceEnt[a]->getBoundingBox();
 		fenceBox[a] = fenceEnt[a]->getBoundingBox();
-		fenceNode[a]->showBoundingBox(true);
+		fenceNode[a]->showBoundingBox(false);
 		fenceNode[a]->setScale(30, 30, 30);
 		fenceNode[a]->setPosition(300, -fenceBox[a].getCorner(AxisAlignedBox::FAR_LEFT_BOTTOM).y - 30, -1200 + a*150);
 		fenceNode[a]->pitch(Degree(-90));
@@ -73,33 +75,55 @@ void SceneSetter::ObjectSetting(SceneManager *mSceneMgr)
 		fenceEnt.push_back(mSceneMgr->createEntity("fence.mesh"));
 		fenceNode.push_back(mSceneMgr->getRootSceneNode()->createChildSceneNode(FenceNodeName.str()));
 		fenceEnt[a]->setMaterialName("fence");
-		fenceEnt[a]->setCastShadows(true);
+		fenceEnt[a]->setCastShadows(false);
 		fenceNode[a]->setScale(30, 30, 30);
 		fenceNode[a]->setPosition(-300, -30, -2100 + a * 150);
 		fenceNode[a]->pitch(Degree(-90));
 		fenceNode[a]->attachObject(fenceEnt[a]);
 	}
 
+	//Tudor house
 	Ogre::Entity* tudorEntity = mSceneMgr->createEntity("tudorhouse.mesh");
 	Ogre::SceneNode* tudorNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("tudorNode");
 	tudorNode->setPosition(600, 530, -1000);
 	tudorNode->attachObject(tudorEntity);
 
+	Entity* wellHouse = mSceneMgr->createEntity("Housekolodec_01.mesh");
+	SceneNode* wellNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("wellNode");
+	wellNode->setPosition(-500,0,-1000);
+	wellNode->setScale(1000, 1000, 1000);
+	wellNode->roll(Degree(-90));
+	wellNode->pitch(Degree(90));
+	wellNode->attachObject(wellHouse);
+
+	Entity* FarmHouse = mSceneMgr->createEntity("HouseLPBuildX12.mesh");
+	SceneNode* FarmNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("farmNode");
+	FarmNode->setPosition(1000, 0, 0);
+	FarmNode->setScale(300, 300, 300);
+	//FarmNode->roll(Degree(-90));
+	//FarmNode->pitch(Degree(90));
+	FarmNode->attachObject(FarmHouse);
+
+	
+	//Creating Tree
 	std::vector<Entity*> treeEnt;
 	std::vector<Entity*> treeLeaf;
 	std::vector<SceneNode*> treeNode;
 	std::vector<SceneNode*> leafNode;
 	std::vector<Vector3> location;
 
+	//Right side of Farm
 	location.push_back(Vector3(-800, -10, -1000));
-	location.push_back(Vector3(-900, -10, -800));
-	location.push_back(Vector3(-700, -10, -900));
-	location.push_back(Vector3(-800, -10, -800));
+	location.push_back(Vector3(-900, -10, -600));
+	location.push_back(Vector3(-700, -10, -300));
+	location.push_back(Vector3(-800, -10, -500));
 	location.push_back(Vector3(-900, -10, -700));
-	location.push_back(Vector3(-650, -10, -500));
-	location.push_back(Vector3(-1000, -10, -700));
+	location.push_back(Vector3(-650, -10, -900));
+	location.push_back(Vector3(-1000, -10, -500));
+	location.push_back(Vector3(-1100, -10, -200));
 	location.push_back(Vector3(-1100, -10, -600));
-	location.push_back(Vector3(-1100, -10, -700));
+
+	//Near the enemy
 	location.push_back(Vector3(-100, -10, 1000));
 	location.push_back(Vector3(-200, -10, 1100));
 	location.push_back(Vector3(-300, -10, 900));
@@ -108,20 +132,22 @@ void SceneSetter::ObjectSetting(SceneManager *mSceneMgr)
 	location.push_back(Vector3(-250, -10, 900));
 	location.push_back(Vector3(-350, -10, 800));
 	location.push_back(Vector3(-450, -10, 1200));
-	location.push_back(Vector3(-00, -10, -1200));
-	location.push_back(Vector3(-50, -10, -1200));
-	location.push_back(Vector3(100, -10, -1200));
-	location.push_back(Vector3(150, -10, -1200));
-	location.push_back(Vector3(250, -10, -1200));
-	location.push_back(Vector3(300, -10, -1200));
-	location.push_back(Vector3(350, -10, -1200));
-	location.push_back(Vector3(270, -10, -1200));
-	location.push_back(Vector3(180, -10, -1200));
-	location.push_back(Vector3(00, -10, -1200));
+	location.push_back(Vector3(100, -10, 800));
+	location.push_back(Vector3(250, -10, 700));
+	location.push_back(Vector3(450, -10, 900));
+	location.push_back(Vector3(700, -10, 1000));
+	location.push_back(Vector3(550, -10, 1100));
+	location.push_back(Vector3(670, -10, 1200));
+	location.push_back(Vector3(380, -10, 800));
+
+	location.push_back(Vector3(-200, -10, -1200));
+	//Behind of Farm
+	location.push_back(Vector3(50, -10, -1200));
+	location.push_back(Vector3(-350, -10, -1200));
+
 
 	std::stringstream TreeNodeName;
 	std::stringstream LeafNodeName;
-
 	for (int a = 0; a < location.size(); a++) {
 		TreeNodeName.str(std::string());
 		LeafNodeName.str(std::string());
@@ -137,13 +163,12 @@ void SceneSetter::ObjectSetting(SceneManager *mSceneMgr)
 		treeEnt[a]->setCastShadows(true);
 		treeLeaf[a]->setMaterialName("Tree_Leaf");
 		treeLeaf[a]->setCastShadows(true);
-		treeNode[a]->setScale(50, 30, 50);
+		treeNode[a]->setScale(50, 30, 30);
 		treeNode[a]->setPosition(location[a]);
 		treeNode[a]->pitch(Degree(-90));
 		treeNode[a]->attachObject(treeEnt[a]);
-		//treeNode[a]->attachObject(treeLeaf[a]);
 		leafNode[a]->pitch(Degree(-90));
-		leafNode[a]->setScale(100, 70, 100);
+		leafNode[a]->setScale(100, 70, 50);
 		leafNode[a]->setPosition(Vector3(location[a].x, location[a].y + 100, location[a].z));
 		leafNode[a]->attachObject(treeLeaf[a]);
 		//treeNode[a]->attachObject(treeLeaf[a]);
@@ -152,13 +177,13 @@ void SceneSetter::ObjectSetting(SceneManager *mSceneMgr)
 
 void SceneSetter::LightSetting(SceneManager *mSceneMgr)
 {
-	//Ogre::Light* light = mSceneMgr->createLight("DirectLight");
-	//Ogre::SceneNode* node = mSceneMgr->createSceneNode("DirectNode");
-	//light->setType(Ogre::Light::LT_DIRECTIONAL);
-	//light->setDirection(Ogre::Vector3(1, -1, 1));
-	//light->setDiffuseColour(Ogre::ColourValue(.1f, .1f, .1f));
-	//node->setPosition(1000, 1000, -1500);
-	//node->attachObject(light);
+	Ogre::Light* light = mSceneMgr->createLight("DirectLight");
+	Ogre::SceneNode* node = mSceneMgr->createSceneNode("DirectNode");
+	light->setType(Ogre::Light::LT_DIRECTIONAL);
+	light->setDirection(Ogre::Vector3(1, -1, 1));
+	light->setDiffuseColour(Ogre::ColourValue(.1f, .1f, .1f));
+	node->setPosition(1000, 1000, -1500);
+	node->attachObject(light);
 
 	//Ogre::Light* point1 = mSceneMgr->createLight("PointLight1");
 	////Ogre::SceneNode* point1Node = mSceneMgr->createSceneNode("PointNode1");
@@ -172,7 +197,6 @@ void SceneSetter::LightSetting(SceneManager *mSceneMgr)
 	Ogre::SceneNode* mainNode = mSceneMgr->createSceneNode("Node1");
 	mSceneMgr->getRootSceneNode()->addChild(mainNode);
 
-
 	// //Create the first point light
 	//Light* light1 = mSceneMgr->createLight("Light1");
 	//light1->setType(Ogre::Light::LT_SPOTLIGHT);
@@ -180,17 +204,22 @@ void SceneSetter::LightSetting(SceneManager *mSceneMgr)
 	//light1->setDiffuseColour(0.255, 0.253, 0.210);
 	//light1->setDirection(0, -1, 0);
 
-	Ogre::Light* light = mSceneMgr->createLight("Light1");
-	light->setType(Ogre::Light::LT_SPOTLIGHT);
-	light->setDirection(Ogre::Vector3(0, -1, 0));
-	light->setDiffuseColour(Ogre::ColourValue(1.0f, 1.0f, 1.0f));
+	Ogre::Light* light2 = mSceneMgr->createLight("Light1");
+	light2->setType(Ogre::Light::LT_SPOTLIGHT);
+	light2->setDirection(Ogre::Vector3(0, -1, 0));
+	light2->setDiffuseColour(Ogre::ColourValue(1.0f, 1.0f, 1.0f));
 	Ogre::SceneNode* node2 = mainNode->createChildSceneNode("node2");
-	node2->setPosition(0, 800, 0); node2->attachObject(light);
+	node2->setPosition(0, 1500, 0); node2->attachObject(light2);
 	//Ogre::Entity* lightEnt = mSceneMgr->createEntity("MyEntity", "sphere.mesh");
 	//Ogre::SceneNode* node3 = node2->createChildSceneNode("node3");
 	//node3->setScale(0.1f, 0.1f, 0.1f); node3->attachObject(lightEnt);
 
-
+	Ogre::Light* pointLight = mSceneMgr->createLight("pointLight");
+	pointLight->setType(Ogre::Light::LT_POINT);
+	pointLight->setDirection(Ogre::Vector3(0, -1, 0));
+	pointLight->setDiffuseColour(Ogre::ColourValue(0.6f, 0.6f, 0.6f));
+	Ogre::SceneNode* node3 = mainNode->createChildSceneNode("node3");
+	node3->setPosition(-500, 300, -1000); node3->attachObject(pointLight);
 
 	mSceneMgr->setShadowTechnique(Ogre::SHADOWTYPE_STENCIL_MODULATIVE);
 	mSceneMgr->setShadowColour(ColourValue(0.0f, 0.0f, 0.0f, 1.0f));
